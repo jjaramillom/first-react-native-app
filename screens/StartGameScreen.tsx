@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,16 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
+  Dimensions,
+  ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import Card from '../components/Card';
 import TitleText from '../components/TitleText';
 import BodyText from '../components/BodyText';
 import Input from '../components/Input';
-import MainButton from '../components/MainButton';
+import MainButton from '../components/MainButton/';
 import NumberContainer from '../components/NumberContainer';
 import colors from '../constants/colors';
 
@@ -23,6 +26,17 @@ const StartGameScreen = ({ onStartGame }: Props) => {
   const [enteredValue, setEnteredValue] = useState<string>('');
   const [confirmed, setConfirmed] = useState<boolean>(false);
   const [selectedNumber, setSelectedNumber] = useState<number>();
+  const [buttonWidth, setButtonWidth] = useState<number>(Dimensions.get('window').width / 4);
+
+  useEffect(() => {
+    const updateLayout = () => {
+      setButtonWidth(Dimensions.get('window').width / 4);
+    };
+    Dimensions.addEventListener('change', updateLayout);
+    return () => {
+      Dimensions.removeEventListener('change', updateLayout);
+    };
+  }, []);
 
   const handleNumberInputChange = (text: string) => {
     setEnteredValue(text.replace(/[^0-9]/g, ''));
@@ -67,33 +81,41 @@ const StartGameScreen = ({ onStartGame }: Props) => {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <View style={styles.screen}>
-        <TitleText style={styles.title}>Start a New Game!</TitleText>
-        <Card style={styles.card}>
-          <BodyText>Select a number</BodyText>
-          <Input
-            style={styles.input}
-            onChangeText={(text) => handleNumberInputChange(text)}
-            value={enteredValue}
-            blurOnSubmit
-            autoCapitalize='none'
-            autoCorrect={false}
-            keyboardType='number-pad'
-            maxLength={2}
-          />
-          <View style={styles.buttonsContainer}>
-            <View style={styles.button}>
-              <Button color={colors.accent} title='Reset' onPress={handleResetInput} />
-            </View>
-            <View style={styles.button}>
-              <Button color={colors.primary} title='Confirm' onPress={handleConfirmInput} />
-            </View>
+    <ScrollView>
+      <KeyboardAvoidingView behavior='position'>
+        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+          <View style={styles.screen}>
+            <TitleText style={styles.title}>Start a New Game!</TitleText>
+            <Card style={styles.card}>
+              <BodyText>Select a number</BodyText>
+              <Input
+                style={styles.input}
+                onChangeText={(text) => handleNumberInputChange(text)}
+                value={enteredValue}
+                blurOnSubmit
+                autoCapitalize='none'
+                autoCorrect={false}
+                keyboardType='number-pad'
+                maxLength={2}
+              />
+              <View style={styles.buttonsContainer}>
+                <View style={{ width: buttonWidth }}>
+                  <Button color={colors.accent} title='Reset' onPress={handleResetInput} />
+                </View>
+                <View style={{ width: buttonWidth }}>
+                  <Button
+                    color={colors.primary}
+                    title='Confirm'
+                    onPress={handleConfirmInput}
+                  />
+                </View>
+              </View>
+            </Card>
+            {confirmedOutput}
           </View>
-        </Card>
-        {confirmedOutput}
-      </View>
-    </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 const styles = StyleSheet.create({
@@ -107,8 +129,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    width: 300,
-    maxWidth: '80%',
+    width: '80%',
+    minWidth: 300,
+    maxWidth: '95%',
     alignItems: 'center',
   },
   title: {
@@ -119,9 +142,6 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
-  },
-  button: {
-    width: 100,
   },
   summaryContainer: {
     marginTop: 20,
